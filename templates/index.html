@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGenie - AI Learning Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+<div class="container">
+    <header>
+        <h1>🎓 EduGenie</h1>
+        <p>Google Gemini Powered Learning Assistant</p>
+    </header>
+
+    <main class="card">
+        <label for="task">Choose a task</label>
+
+        <select id="task">
+            <option value="qa">Ask a Question</option>
+            <option value="explain">Explain a Topic</option>
+            <option value="quiz">Generate Quiz</option>
+            <option value="summarize">Summarize</option>
+            <option value="learn">Learning Path</option>
+        </select>
+
+        <label for="inputText">Enter your topic, question, or text</label>
+
+        <textarea id="inputText"
+            placeholder="Example: Explain photosynthesis in simple words..."
+        ></textarea>
+
+        <button onclick="submitTask()">Generate</button>
+
+        <div id="loading" class="loading hidden">Thinking...</div>
+
+        <section id="result" class="result">
+            <h2>Result</h2>
+            <pre id="resultText">Your result will appear here.</pre>
+        </section>
+    </main>
+</div>
+
+<script>
+async function submitTask() {
+    const task = document.getElementById("task").value;
+    const text = document.getElementById("inputText").value.trim();
+    const resultText = document.getElementById("resultText");
+    const loading = document.getElementById("loading");
+
+    if (!text) {
+        resultText.textContent = "Please enter something first.";
+        return;
+    }
+
+    let endpoint = "/qa";
+
+    if (task === "explain") endpoint = "/explain";
+    if (task === "quiz") endpoint = "/quiz";
+    if (task === "summarize") endpoint = "/summarize";
+    if (task === "learn") endpoint = "/learn/recommendations";
+
+    loading.classList.remove("hidden");
+    resultText.textContent = "";
+
+    try {
+        const formData = new FormData();
+        formData.append("text", text);
+
+        const response = await fetch(endpoint, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (task === "quiz" && data.result) {
+            resultText.textContent = JSON.stringify(data.result, null, 2);
+        } else {
+            resultText.textContent = data.result || "No result received.";
+        }
+
+    } catch (error) {
+        resultText.textContent = "Error connecting to the backend: " + error;
+    } finally {
+        loading.classList.add("hidden");
+    }
+}
+</script>
+</body>
+</html>
